@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Azizbek AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #00f5ff;
+    --secondary: #7b2ff7;
+    --accent: #ff006e;
+    --dark: #020818;
+    --dark2: #050d2a;
+    --glow: 0 0 20px rgba(0,245,255,0.5);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark);
+    color: #e0f4ff;
+    font-family: 'Rajdhani', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    width: 20px; height: 20px;
+    border: 2px solid var(--primary);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.1s, background 0.2s;
+    mix-blend-mode: screen;
+  }
+  .cursor-dot {
+    width: 6px; height: 6px;
+    background: var(--primary);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Animated grid background */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridPulse 8s ease-in-out infinite;
+    z-index: 0;
+  }
+  @keyframes gridPulse {
+    0%,100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  /* Floating orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.15;
+    z-index: 0;
+    animation: float 12s ease-in-out infinite;
+  }
+  .orb1 { width: 600px; height: 600px; background: var(--secondary); top: -200px; left: -200px; animation-delay: 0s; }
+  .orb2 { width: 400px; height: 400px; background: var(--primary); bottom: -150px; right: -100px; animation-delay: 4s; }
+  .orb3 { width: 300px; height: 300px; background: var(--accent); top: 50%; left: 50%; animation-delay: 8s; }
+  @keyframes float {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33% { transform: translate(30px,-30px) scale(1.05); }
+    66% { transform: translate(-20px,20px) scale(0.95); }
+  }
+
+  /* NAVBAR */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 20px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(0,245,255,0.1);
+    backdrop-filter: blur(20px);
+    background: rgba(2,8,24,0.7);
+  }
+
+  .logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--primary);
+    text-shadow: var(--glow);
+    letter-spacing: 3px;
+  }
+  .logo span { color: var(--accent); }
+
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 40px;
+  }
+  nav ul a {
+    text-decoration: none;
+    color: rgba(224,244,255,0.7);
+    font-size: 0.95rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: color 0.3s, text-shadow 0.3s;
+  }
+  nav ul a:hover {
+    color: var(--primary);
+    text-shadow: var(--glow);
+  }
+
+  .nav-btn {
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    padding: 10px 24px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+  .nav-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--primary);
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+    z-index: -1;
+  }
+  .nav-btn:hover { color: var(--dark); }
+  .nav-btn:hover::before { transform: translateX(0); }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 120px 40px 80px;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(0,245,255,0.3);
+    padding: 8px 20px;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin-bottom: 40px;
+    animation: fadeInDown 1s ease both;
+  }
+  .badge-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: blink 1.5s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+  .hero h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 4px;
+    margin-bottom: 30px;
+    animation: fadeInUp 1s ease 0.2s both;
+  }
+  .hero h1 .name { 
+    color: var(--primary);
+    text-shadow: 0 0 40px rgba(0,245,255,0.6);
+  }
+  .hero h1 .ai-text {
+    background: linear-gradient(135deg, var(--accent), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-sub {
+    font-size: 1.2rem;
+    color: rgba(224,244,255,0.6);
+    max-width: 600px;
+    line-height: 1.8;
+    margin-bottom: 50px;
+    letter-spacing: 1px;
+    animation: fadeInUp 1s ease 0.4s both;
+  }
+
+  .hero-buttons {
+    display: flex;
+    gap: 20px;
+    animation: fadeInUp 1s ease 0.6s both;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--secondary), var(--accent));
+    border: none;
+    padding: 16px 40px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    color: white;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  }
+  .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 40px rgba(123,47,247,0.5);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid rgba(0,245,255,0.4);
+    padding: 16px 40px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    color: var(--primary);
+    cursor: pointer;
+    transition: all 0.3s;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  }
+  .btn-secondary:hover {
+    background: rgba(0,245,255,0.05);
+    box-shadow: var(--glow);
+    transform: translateY(-3px);
+  }
+
+  /* Animated stats */
+  .stats {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    padding: 60px 40px;
+    border-top: 1px solid rgba(0,245,255,0.1);
+    border-bottom: 1px solid rgba(0,245,255,0.1);
+    background: rgba(5,13,42,0.5);
+    animation: fadeIn 1s ease 0.8s both;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-shadow: var(--glow);
+  }
+  .stat-label {
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(224,244,255,0.5);
+    margin-top: 8px;
+  }
+
+  /* FEATURES */
+  .features {
+    position: relative;
+    z-index: 1;
+    padding: 100px 60px;
+  }
+  .section-header {
+    text-align: center;
+    margin-bottom: 70px;
+  }
+  .section-label {
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: block;
+  }
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 700;
+    color: #e0f4ff;
+    letter-spacing: 2px;
+  }
+  .section-title span { color: var(--primary); }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .feature-card {
+    background: rgba(5,13,42,0.8);
+    border: 1px solid rgba(0,245,255,0.1);
+    padding: 40px 30px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.4s, border-color 0.4s;
+    clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0,245,255,0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .feature-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(0,245,255,0.4);
+  }
+  .feature-card:hover::before { opacity: 1; }
+
+  .feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .feature-card h3 {
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    color: var(--primary);
+    margin-bottom: 15px;
+  }
+  .feature-card p {
+    color: rgba(224,244,255,0.6);
+    line-height: 1.8;
+    font-size: 0.95rem;
+  }
+
+  /* AI CHAT DEMO */
+  .chat-section {
+    position: relative;
+    z-index: 1;
+    padding: 100px 60px;
+    background: rgba(5,13,42,0.5);
+  }
+  .chat-demo {
+    max-width: 700px;
+    margin: 0 auto;
+    background: rgba(2,8,24,0.9);
+    border: 1px solid rgba(0,245,255,0.2);
+    overflow: hidden;
+    clip-path: polygon(0 0, calc(100% - 30px) 0, 100% 30px, 100% 100%, 30px 100%, 0 calc(100% - 30px));
+  }
+  .chat-header {
+    padding: 20px 30px;
+    border-bottom: 1px solid rgba(0,245,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(5,13,42,0.8);
+  }
+  .chat-avatar {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--secondary), var(--primary));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: white;
+  }
+  .chat-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    color: var(--primary);
+  }
+  .chat-status {
+    font-size: 0.75rem;
+    color: rgba(224,244,255,0.4);
+  }
+  .online-dot {
+    width: 8px; height: 8px;
+    background: #00ff88;
+    border-radius: 50%;
+    margin-left: auto;
+    box-shadow: 0 0 10px #00ff88;
+    animation: blink 2s ease-in-out infinite;
+  }
+  .chat-body {
+    padding: 30px;
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .msg {
+    max-width: 75%;
+    padding: 14px 20px;
+    line-height: 1.7;
+    font-size: 0.9rem;
+    animation: slideIn 0.5s ease both;
+  }
+  .msg-ai {
+    background: rgba(0,245,255,0.07);
+    border: 1px solid rgba(0,245,255,0.15);
+    border-radius: 0 12px 12px 12px;
+    align-self: flex-start;
+    color: rgba(224,244,255,0.9);
+  }
+  .msg-user {
+    background: rgba(123,47,247,0.2);
+    border: 1px solid rgba(123,47,247,0.3);
+    border-radius: 12px 0 12px 12px;
+    align-self: flex-end;
+    color: rgba(224,244,255,0.9);
+  }
+  .typing {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 14px 20px;
+    background: rgba(0,245,255,0.07);
+    border: 1px solid rgba(0,245,255,0.15);
+    border-radius: 0 12px 12px 12px;
+    align-self: flex-start;
+    width: fit-content;
+  }
+  .typing span {
+    width: 8px; height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+    animation: typing 1.2s ease-in-out infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing {
+    0%,100% { transform: translateY(0); opacity: 0.4; }
+    50% { transform: translateY(-6px); opacity: 1; }
+  }
+  .chat-input-area {
+    padding: 20px 30px;
+    border-top: 1px solid rgba(0,245,255,0.1);
+    display: flex;
+    gap: 12px;
+  }
+  .chat-input {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(0,245,255,0.2);
+    padding: 12px 20px;
+    color: #e0f4ff;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  .chat-input:focus { border-color: var(--primary); }
+  .chat-input::placeholder { color: rgba(224,244,255,0.3); }
+  .send-btn {
+    background: linear-gradient(135deg, var(--secondary), var(--accent));
+    border: none;
+    padding: 12px 24px;
+    color: white;
+    cursor: pointer;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .send-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 20px rgba(255,0,110,0.4);
+  }
+
+  /* CTA */
+  .cta {
+    position: relative;
+    z-index: 1;
+    padding: 100px 60px;
+    text-align: center;
+  }
+  .cta h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #e0f4ff;
+  }
+  .cta h2 span { color: var(--primary); text-shadow: var(--glow); }
+  .cta p {
+    color: rgba(224,244,255,0.5);
+    font-size: 1.1rem;
+    max-width: 500px;
+    margin: 0 auto 40px;
+    letter-spacing: 1px;
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    padding: 40px 60px;
+    border-top: 1px solid rgba(0,245,255,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(2,8,24,0.8);
+  }
+  footer .logo { font-size: 1.1rem; }
+  footer p {
+    color: rgba(224,244,255,0.3);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* Scan line effect */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.05) 2px,
+      rgba(0,0,0,0.05) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 16px 24px; }
+    nav ul { display: none; }
+    .hero { padding: 100px 24px 60px; }
+    .hero-buttons { flex-direction: column; align-items: center; }
+    .stats { flex-wrap: wrap; gap: 30px; padding: 40px 24px; }
+    .features { padding: 60px 24px; }
+    .chat-section { padding: 60px 24px; }
+    .cta { padding: 60px 24px; }
+    footer { flex-direction: column; gap: 16px; text-align: center; padding: 30px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="grid-bg"></div>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">AZIZBEK<span>.</span>AI</div>
+  <ul>
+    <li><a href="#features">Imkoniyatlar</a></li>
+    <li><a href="#chat">Demo</a></li>
+    <li><a href="#contact">Aloqa</a></li>
+  </ul>
+  <button class="nav-btn">Boshlash</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    Kelajak bugun boshlanadi
+  </div>
+  <h1>
+    <span class="name">AZIZBEK</span><br>
+    <span class="ai-text">AI</span>
+  </h1>
+  <p class="hero-sub">
+    O'zbekistonning eng zamonaviy sun'iy intellekt platformasi. 
+    Savollaringizga javob toping, ijod qiling va imkoniyatlarni kashf eting.
+  </p>
+  <div class="hero-buttons">
+    <button class="btn-primary" onclick="scrollToChat()">Demo Ko'rish</button>
+    <button class="btn-secondary">Ko'proq Bilish</button>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat">
+    <div class="stat-num" data-target="98">0</div>
+    <div class="stat-label">% Aniqlik</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num" data-target="50">0</div>
+    <div class="stat-label">+ Til Qo'llab-quvvatlash</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num" data-target="24">0</div>
+    <div class="stat-label">/7 Faollik</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num" data-target="10">0</div>
+    <div class="stat-label">K+ Foydalanuvchi</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-header">
+    <span class="section-label">Nima qiladi?</span>
+    <h2 class="section-title">Kuchli <span>Imkoniyatlar</span></h2>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <span class="feature-icon">🧠</span>
+      <h3>Aqlli Suhbat</h3>
+      <p>Har qanday mavzuda chuqur suhbat olib boring. Savollaringizga aniq va to'liq javob oling.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">✍️</span>
+      <h3>Kontent Yaratish</h3>
+      <p>Maqolalar, sheʼrlar, taqdimotlar va boshqa matnlarni bir zumda yarating.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💻</span>
+      <h3>Kod Yozish</h3>
+      <p>Dasturlash tillarida kod yozing, xatolarni toping va tushuntirishlar oling.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🌐</span>
+      <h3>Tarjima</h3>
+      <p>O'zbek, rus, ingliz va boshqa 50+ tildan tarjima qiling, til to'siqlarini yo'q qiling.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📊</span>
+      <h3>Tahlil & Hisobot</h3>
+      <p>Ma'lumotlarni tahlil qiling, trendlarni aniqlang va batafsil hisobotlar oling.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎨</span>
+      <h3>Ijodiy Yordam</h3>
+      <p>Dizayn g'oyalari, brending va ijodiy loyihalaringizda ko'mak oling.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CHAT DEMO -->
+<section class="chat-section" id="chat">
+  <div class="section-header">
+    <span class="section-label">Sinab ko'ring</span>
+    <h2 class="section-title">Jonli <span>Demo</span></h2>
+  </div>
+  <div class="chat-demo">
+    <div class="chat-header">
+      <div class="chat-avatar">AZ</div>
+      <div>
+        <div class="chat-name">Azizbek AI</div>
+        <div class="chat-status">Sun'iy Intellekt Yordamchisi</div>
+      </div>
+      <div class="online-dot"></div>
+    </div>
+    <div class="chat-body" id="chatBody">
+      <div class="msg msg-ai">Salom! Men Azizbek AI — sizning aqlli yordamchingizman. Bugun sizga qanday yordam bera olaman? 🚀</div>
+    </div>
+    <div class="chat-input-area">
+      <input class="chat-input" id="chatInput" type="text" placeholder="Savolingizni yozing..." onkeydown="handleKey(event)">
+      <button class="send-btn" onclick="sendMessage()">YUBORISH</button>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta" id="contact">
+  <h2>Kelajakka Qadam <span>Qo'ying</span></h2>
+  <p>Azizbek AI bilan imkoniyatlaringizni cheksiz darajaga olib chiqing</p>
+  <button class="btn-primary" style="margin: 0 auto; display: block;">Bepul Boshlash</button>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="logo">AZIZBEK<span>.</span>AI</div>
+  <p>© 2025 Azizbek AI. Barcha huquqlar himoyalangan.</p>
+  <p>O'zbekiston 🇺🇿</p>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const dot = document.getElementById('cursorDot');
+  let mx = 0, my = 0, cx = 0, cy = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animCursor() {
+    cx += (mx - cx) * 0.15;
+    cy += (my - cy) * 0.15;
+    cursor.style.left = (cx - 10) + 'px';
+    cursor.style.top = (cy - 10) + 'px';
+    dot.style.left = (mx - 3) + 'px';
+    dot.style.top = (my - 3) + 'px';
+    requestAnimationFrame(animCursor);
+  }
+  animCursor();
+  document.querySelectorAll('button, a, input').forEach(el => {
+    el.addEventListener('mouseenter', () => { cursor.style.transform = 'scale(2)'; cursor.style.background = 'rgba(0,245,255,0.2)'; });
+    el.addEventListener('mouseleave', () => { cursor.style.transform = 'scale(1)'; cursor.style.background = 'transparent'; });
+  });
+
+  // Counter animation
+  const counters = document.querySelectorAll('[data-target]');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const el = e.target;
+        const target = +el.dataset.target;
+        let curr = 0;
+        const step = target / 60;
+        const timer = setInterval(() => {
+          curr = Math.min(curr + step, target);
+          el.textContent = Math.floor(curr);
+          if (curr >= target) clearInterval(timer);
+        }, 20);
+        obs.unobserve(el);
+      }
+    });
+  });
+  counters.forEach(c => obs.observe(c));
+
+  // Chat demo
+  const responses = [
+    "Ajoyib savol! Bu haqida batafsil tushuntirib beraman. Azizbek AI doimo sizga yordam berishga tayyor! 💡",
+    "Albatta! Bu masala bo'yicha eng yaxshi yechimni topamiz. Keling, bosqichma-bosqich ko'rib chiqaylik. 🎯",
+    "Zo'r! Men bu mavzuni juda yaxshi tushunaman. Sizga aniq va foydali ma'lumot beraman. ⚡",
+    "Qiziqarli savol! Mening tahlilimga ko'ra, eng to'g'ri yondashuv quyidagicha bo'lishi mumkin... 🧠",
+    "Ha, bu haqida aniq javob bera olaman! O'zbek tilida siz uchun eng yaxshi tarzda tushuntiraman. 🌟"
+  ];
+
+  function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const body = document.getElementById('chatBody');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const userMsg = document.createElement('div');
+    userMsg.className = 'msg msg-user';
+    userMsg.textContent = text;
+    body.appendChild(userMsg);
+    input.value = '';
+    body.scrollTop = body.scrollHeight;
+
+    const typing = document.createElement('div');
+    typing.className = 'typing';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    body.appendChild(typing);
+    body.scrollTop = body.scrollHeight;
+
+    setTimeout(() => {
+      body.removeChild(typing);
+      const aiMsg = document.createElement('div');
+      aiMsg.className = 'msg msg-ai';
+      aiMsg.textContent = responses[Math.floor(Math.random() * responses.length)];
+      body.appendChild(aiMsg);
+      body.scrollTop = body.scrollHeight;
+    }, 1500 + Math.random() * 500);
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter') sendMessage();
+  }
+
+  function scrollToChat() {
+    document.getElementById('chat').scrollIntoView({ behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
